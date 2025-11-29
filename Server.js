@@ -9,4 +9,5 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use("/api/users", UserRoutes);
 dbConnect();
-app.listen(PORT,()=>console.log('SERVER Running at PORT',{PORT}));
+module.exports = app;
+
