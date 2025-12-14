@@ -2,7 +2,7 @@ import User from './UserSchema.js';
 import Cart from './model.js';
 export const SignUpUser = async (req, res) => {
   try {
-    const { name, password } = req.body;
+    const { name, password} = req.body;
     const userExist = await User.findOne({name});
     if (userExist) {
       return res.status(400).json({ message: "User already exists" });
@@ -10,7 +10,7 @@ export const SignUpUser = async (req, res) => {
     const user = await User.create({ name, password });
     res.status(201).json({ message: "User registered successfully ✅", user });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 export const loginUser = async (req, res) => {
@@ -24,7 +24,7 @@ export const loginUser = async (req, res) => {
 
     res.json({ message: "Login successful ✅", user });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 export const addToCart = async (req, res) => {
