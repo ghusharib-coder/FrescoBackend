@@ -1,5 +1,6 @@
 import User from './UserSchema.js';
 import Cart from './model.js';
+import Order from './OrderSchema.js';
 export const SignUpUser = async (req, res) => {
   try {
     const { name, password} = req.body;
@@ -89,4 +90,98 @@ export const removeFromCart = async (req, res) => {
     res.status(500).json({ error: "Failed to remove item" });
   }
   
+};
+
+// 🛍️ Create Order
+export const createOrder = async (req, res) => {
+  try {
+    const { userId, items, totalPrice, deliveryAddress, paymentMethod } = req.body;
+
+    if (!userId || !items || items.length === 0 || !totalPrice) {
+      return res.status(400).json({ message: "Invalid order data" });
+    }
+
+    const order = new Order({
+      userId,
+      items,
+      totalPrice,
+      deliveryAddress,
+      paymentMethod,
+      paymentStatus: 'pending',
+      orderStatus: 'pending',
+    });
+
+    await order.save();
+    console.log("✅ Order created successfully:", order._id);
+    res.status(201).json({ message: "Order created successfully ✅", order });
+  } catch (err) {
+    console.error("🔥 Error in createOrder:", err);
+    res.status(500).json({ message: "Failed to create order" });
+  }
+};
+
+// 💳 Process Payment (Mock Easypaisa)
+export const processPayment = async (req, res) => {
+  try {
+    const { orderId, accountNumber, pinCode } = req.body;
+
+    if (!orderId || !accountNumber || !pinCode) {
+      return res.status(400).json({ message: "Missing payment details" });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Mock Easypaisa validation
+    const transactionId = "TXN_" + Date.now();
+    
+    order.paymentStatus = 'completed';
+    order.orderStatus = 'confirmed';
+    order.transactionId = transactionId;
+    order.updatedAt = Date.now();
+
+    await order.save();
+
+    console.log("✅ Payment processed successfully");
+    res.status(200).json({ 
+      message: "Payment successful ✅", 
+      transactionId,
+      order 
+    });
+  } catch (err) {
+    console.error("🔥 Error in processPayment:", err);
+    res.status(500).json({ message: "Payment processing failed" });
+  }
+};
+
+// 📦 Get User Orders
+export const getUserOrders = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    res.status(200).json(orders || []);
+  } catch (err) {
+    console.error("🔥 Error in getUserOrders:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+};
+
+// 🔍 Get Order Details
+export const getOrderDetails = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json(order);
+  } catch (err) {
+    console.error("🔥 Error in getOrderDetails:", err);
+    res.status(500).json({ error: "Failed to fetch order details" });
+  }
 };
